@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>친환경 농장 타이쿤</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* 레이아웃: 하늘 배경 위 한 화면에 한 단계. 위쪽 진행 표시, 가운데 뽑기 카드, 아래쪽 큰 결정 버튼. 귀여운 단일(밝은) 테마 */
+:root {
+  --sky: #DDF0FF;
+  --sky-deep: #BFE2FF;
+  --hill: #9BD67F;
+  --hill-deep: #6FBE58;
+  --card: #FFFFFF;
+  --ink: #23331F;
+  --ink-soft: #566552;
+  --leaf: #3E9B3A;
+  --leaf-soft: #E3F5DC;
+  --sun: #FFC93C;
+  --sun-soft: #FFF3CC;
+  --berry: #FF6B6B;
+  --berry-soft: #FFE6E3;
+  --grape: #7A6FF0;
+  --line: #D6E4CF;
+  --font-display: "Jua", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--sky); }
+.scenery { position: fixed; inset: auto 0 0 0; height: 150px; z-index: 0; pointer-events: none; }
+.scenery svg { width: 100%; height: 100%; display: block; }
+.cloud { position: fixed; z-index: 0; pointer-events: none; background: #FFFFFF; border-radius: 999px; opacity: .85; }
+.cloud::before, .cloud::after { content: ""; position: absolute; background: #FFFFFF; border-radius: 50%; }
+.c1 { width: 120px; height: 34px; top: 90px; left: -20px; animation: drift 60s linear infinite; }
+.c1::before { width: 54px; height: 54px; left: 22px; top: -26px; } .c1::after { width: 40px; height: 40px; left: 64px; top: -16px; }
+.c2 { width: 90px; height: 26px; top: 200px; right: 6%; animation: drift 80s linear infinite reverse; }
+.c2::before { width: 40px; height: 40px; left: 16px; top: -20px; } .c2::after { width: 30px; height: 30px; left: 46px; top: -12px; }
+@keyframes drift { from { transform: translateX(0); } to { transform: translateX(40vw); } }
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 920px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 170px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* 상단 진행 */
+.hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.sign {
+  font-family: var(--font-display); font-size: 1.15rem; background: #A9744A; color: #FFFFFF;
+  padding: 6px 16px; border-radius: 10px; box-shadow: 0 4px 0 #7D5232; position: relative; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.track { display: flex; gap: 6px; align-items: center; }
+.dot {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: #FFFFFF; border: 3px solid var(--line); font-size: 1.1rem; transition: transform .25s, border-color .25s, background .25s;
+}
+.dot.now { border-color: var(--sun); background: var(--sun-soft); transform: scale(1.15); }
+.dot.done { border-color: var(--leaf); background: var(--leaf-soft); }
+.bar { width: 10px; height: 3px; background: var(--line); border-radius: 2px; }
+@media (max-width: 480px) { .dot { width: 30px; height: 30px; font-size: .9rem; border-width: 2px; } .bar { width: 4px; } .sign { font-size: 1rem; } }
+
+/* 단계 화면 */
+.stage { display: flex; flex-direction: column; gap: 16px; animation: pop-in .35s ease-out; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.bubble {
+  background: var(--card); border-radius: 22px; padding: 16px 20px; display: flex; gap: 14px; align-items: center;
+  box-shadow: 0 6px 0 rgba(35, 51, 31, .08);
+}
+.bubble .face { font-size: 2.6rem; line-height: 1; flex: none; }
+.bubble h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; line-height: 1.25; text-wrap: balance; }
+.bubble p { margin: 2px 0 0; color: var(--ink-soft); font-size: .95rem; }
+
+/* 뽑기 카드 */
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+.pick {
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  background: var(--card); border: 4px solid transparent; border-radius: 22px; padding: 16px;
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  box-shadow: 0 6px 0 rgba(35, 51, 31, .1); transition: transform .15s, border-color .15s, box-shadow .15s;
+  min-height: 44px;
+}
+.pick:hover { transform: translateY(-2px); }
+.pick:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(35, 51, 31, .1); }
+.pick[aria-pressed="true"] { border-color: var(--sun); background: var(--sun-soft); box-shadow: 0 6px 0 #E6AE1F; }
+.pick:disabled { cursor: default; }
+.pick .emo { font-size: 3rem; line-height: 1.1; }
+.pick .name { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.2; }
+.pick .desc { font-size: .9rem; color: var(--ink-soft); }
+.pick .row { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: .78rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--leaf-soft); color: #2C6E29; white-space: nowrap; }
+.tag.sun { background: var(--sun-soft); color: #8A5A00; }
+.tag.berry { background: var(--berry-soft); color: #B33A3A; }
+.tag.grape { background: #ECEAFF; color: #4B42B8; }
+.money { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .88rem; font-variant-numeric: tabular-nums; }
+.money span:nth-child(odd) { color: var(--ink-soft); }
+.money b { font-weight: 700; }
+@media (max-width: 640px) {
+  .pick { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .pick .emo { font-size: 2.4rem; }
+  .pick .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+}
+.pick .body { display: flex; flex-direction: column; gap: 6px; }
+
+/* 굴러가는 중 */
+.rolling .pick { animation: jiggle .14s linear infinite; pointer-events: none; }
+.rolling .pick .emo { filter: blur(.4px); }
+@keyframes jiggle { 0%,100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+.land { animation: land .45s cubic-bezier(.3,1.6,.5,1) !important; }
+@keyframes land { 0% { transform: scale(.85); } 100% { transform: scale(1); } }
+
+/* 위기 룰렛 */
+.crisis-stage { display: grid; place-items: center; }
+.crisis-card {
+  width: min(380px, 100%); background: var(--card); border-radius: 26px; padding: 22px 20px; text-align: center;
+  border: 5px solid var(--berry); box-shadow: 0 8px 0 #D94F4F; display: flex; flex-direction: column; gap: 6px; align-items: center;
+}
+.crisis-card .emo { font-size: 4.2rem; line-height: 1.1; }
+.crisis-card .label { font-size: .8rem; font-weight: 700; color: #B33A3A; letter-spacing: .1em; }
+.crisis-card h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.8rem; line-height: 1.2; }
+.crisis-card p { margin: 0; color: var(--ink-soft); }
+.crisis-card.spin { animation: wobble .18s linear infinite; }
+@keyframes wobble { 0%,100% { transform: rotate(-3deg) scale(.98); } 50% { transform: rotate(3deg) scale(1.02); } }
+.crisis-card.hit { animation: hit .6s cubic-bezier(.3,1.6,.5,1); }
+@keyframes hit { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+/* 버튼 */
+.actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.btn {
+  font: inherit; font-family: var(--font-display); font-size: 1.3rem; border: none; cursor: pointer;
+  background: var(--leaf); color: #FFFFFF; border-radius: 18px; padding: 14px 30px; min-height: 56px;
+  box-shadow: 0 6px 0 #2B7428; transition: transform .1s, box-shadow .1s;
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2B7428; }
+.btn:disabled { background: #B9C7B3; box-shadow: 0 6px 0 #9AAA94; cursor: not-allowed; }
+.btn.sun { background: var(--sun); color: var(--ink); box-shadow: 0 6px 0 #D9A21C; }
+.btn.sun:active { box-shadow: 0 2px 0 #D9A21C; }
+.btn.ghost { background: #FFFFFF; color: var(--leaf); box-shadow: 0 6px 0 #C9D9C2; }
+.btn:focus-visible, .pick:focus-visible, input:focus-visible { outline: 4px solid var(--grape); outline-offset: 3px; }
+
+/* 시작 화면 */
+.title-card { background: var(--card); border-radius: 28px; padding: 26px 22px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; box-shadow: 0 8px 0 rgba(35, 51, 31, .1); }
+.title-card .logo { font-size: 3.6rem; line-height: 1; animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.title-card h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.1; color: var(--leaf); }
+.title-card .sub { margin: 0; color: var(--ink-soft); max-width: 34em; }
+.name-input { width: min(360px, 100%); display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.name-input label { font-weight: 700; font-size: .95rem; }
+.name-input input {
+  font: inherit; font-family: var(--font-display); font-size: 1.4rem; text-align: center;
+  border: 4px solid var(--line); border-radius: 16px; padding: 10px 14px; width: 100%; color: var(--ink); background: #FBFFF8;
+}
+.name-input input:focus { border-color: var(--sun); outline: none; }
+.how { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.how div { background: var(--leaf-soft); border-radius: 14px; padding: 10px 4px; font-size: .78rem; font-weight: 700; color: #2C6E29; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.how div span { font-size: 1.6rem; }
+@media (max-width: 480px) { .how { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* 결과 */
+.result { background: var(--card); border-radius: 28px; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 0 rgba(35, 51, 31, .1); }
+.grade { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.grade .medal { font-size: 4.4rem; line-height: 1; animation: hit .8s cubic-bezier(.3,1.6,.5,1); }
+.grade .gname { font-family: var(--font-display); font-size: 2rem; line-height: 1.2; }
+.grade .farm { color: var(--ink-soft); font-size: .95rem; }
+.profit { text-align: center; background: var(--sun-soft); border-radius: 20px; padding: 14px; }
+.profit .lbl { font-weight: 700; color: #8A5A00; font-size: .9rem; }
+.profit .num { font-family: var(--font-display); font-size: clamp(2.2rem, 9vw, 3.2rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.profit .num.minus { color: #C83C3C; }
+.profit .cmp { font-size: .88rem; color: var(--ink-soft); }
+.ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .ledger { grid-template-columns: 1fr; } }
+.ledger section { border: 3px solid var(--line); border-radius: 18px; padding: 12px 14px; min-width: 0; }
+.ledger h3 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; }
+.ledger .in h3 { color: var(--leaf); } .ledger .out h3 { color: #C83C3C; }
+.ledger ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ledger li { display: flex; justify-content: space-between; gap: 10px; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.ledger li span:first-child { color: var(--ink-soft); min-width: 0; }
+.ledger li b { white-space: nowrap; }
+.ledger .sum { border-top: 2px dashed var(--line); padding-top: 6px; margin-top: 2px; font-weight: 700; }
+.ledger .sum span:first-child { color: var(--ink); }
+.notes { display: grid; gap: 8px; }
+.note { display: flex; gap: 10px; align-items: flex-start; background: #F6FAF3; border-radius: 14px; padding: 10px 12px; font-size: .93rem; }
+.note .ic { font-size: 1.4rem; line-height: 1.2; flex: none; }
+.note b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; }
+.note.good { background: var(--leaf-soft); } .note.bad { background: var(--berry-soft); } .note.mid { background: var(--sun-soft); }
+.eco { display: flex; justify-content: center; gap: 4px; font-size: 1.6rem; }
+.eco .off { filter: grayscale(1); opacity: .3; }
+.hall { background: var(--card); border-radius: 22px; padding: 14px 16px; display: grid; gap: 6px; }
+.hall h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 1.15rem; }
+.hall ol { margin: 0; padding-left: 1.3em; display: grid; gap: 2px; font-size: .92rem; font-variant-numeric: tabular-nums; }
+.hall .empty { color: var(--ink-soft); font-size: .9rem; }
+.tip { text-align: center; font-size: .85rem; color: var(--ink-soft); }
+
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 20; overflow: hidden; }
+.confetti i { position: absolute; top: -20px; font-style: normal; font-size: 1.6rem; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="cloud c1" aria-hidden="true"></div>
+<div class="cloud c2" aria-hidden="true"></div>
+<div class="scenery" aria-hidden="true">
+  <svg viewBox="0 0 1200 150" preserveAspectRatio="none">
+    <path d="M0 70 C 200 20, 380 40, 560 70 S 900 20, 1200 60 L1200 150 L0 150 Z" fill="#9BD67F"></path>
+    <path d="M0 105 C 260 70, 520 90, 760 110 S 1060 80, 1200 100 L1200 150 L0 150 Z" fill="#6FBE58"></path>
+    <g fill="#4E9A3E">
+      <rect x="120" y="118" width="3" height="16"></rect><rect x="140" y="114" width="3" height="20"></rect><rect x="160" y="118" width="3" height="16"></rect>
+      <rect x="980" y="112" width="3" height="20"></rect><rect x="1000" y="116" width="3" height="16"></rect><rect x="1020" y="112" width="3" height="20"></rect>
+    </g>
+  </svg>
+</div>
+
+<main class="app" id="app">
+  <div class="hud" id="hud" hidden>
+    <div class="sign" id="farmSign">농장</div>
+    <div class="track" id="track" aria-label="진행 단계"></div>
+  </div>
+  <div id="screen"></div>
+</main>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= 게임 데이터 =================
+     금액 단위: 만 원 (1년 농사 기준, 실제 농가 자료를 참고해 단순하게 만든 숫자)
+     type: paddy(논) field(밭) greenhouse(하우스) orchard(과수원)               */
+  const CROPS = [
+    { id: "rice", e: "🌾", name: "쌀", type: "paddy", rev: 1100, cost: 650, vol: 0.08, work: 1, note: "정부가 사 주는 제도가 있어 값이 안정적이지만 버는 돈은 적은 편이에요." },
+    { id: "potato", e: "🥔", name: "감자", type: "field", rev: 1500, cost: 850, vol: 0.25, work: 1, note: "키우기 쉬운 편이지만 해마다 값이 많이 달라져요." },
+    { id: "sweetpotato", e: "🍠", name: "고구마", type: "field", rev: 1800, cost: 950, vol: 0.2, work: 2, note: "간식과 가공품으로 인기가 많아요." },
+    { id: "cabbage", e: "🥬", name: "배추", type: "field", rev: 1600, cost: 900, vol: 0.4, work: 2, note: "김장철 값이 크게 오르내려요. 대박 아니면 쪽박!" },
+    { id: "lettuce", e: "🥗", name: "상추", type: "field", rev: 1400, cost: 800, vol: 0.3, work: 2, note: "빨리 자라서 여러 번 거둘 수 있지만 여름에 쉽게 물러요." },
+    { id: "pepper", e: "🌶️", name: "고추", type: "field", rev: 2400, cost: 1500, vol: 0.3, work: 3, note: "값은 좋지만 탄저병 같은 병에 약해 손이 많이 가요." },
+    { id: "bean", e: "🫘", name: "콩", type: "field", rev: 1000, cost: 450, vol: 0.15, work: 1, note: "뿌리의 뿌리혹박테리아가 땅을 기름지게 해 줘요." },
+    { id: "strawberry", e: "🍓", name: "딸기", type: "greenhouse", rev: 4500, cost: 2800, vol: 0.2, work: 3, note: "버는 돈이 크지만 시설비와 일손이 아주 많이 들어요." },
+    { id: "tomato", e: "🍅", name: "토마토", type: "greenhouse", rev: 3600, cost: 2200, vol: 0.25, work: 3, note: "하우스에서 오래 수확해요. 꿀벌이 꽃가루받이를 도와요." },
+    { id: "blueberry", e: "🫐", name: "블루베리", type: "orchard", rev: 2500, cost: 1200, vol: 0.2, work: 2, note: "인기 많은 과일이지만 새들이 열매를 노려요." },
+    { id: "apple", e: "🍎", name: "사과", type: "orchard", rev: 3000, cost: 1700, vol: 0.2, work: 3, note: "태풍과 탄저병을 조심해야 하는 과일이에요." }
+  ];
+  const PLACE = { paddy: "논", field: "밭", greenhouse: "비닐하우스", orchard: "과수원" };
+  const PRODUCT = { rice: "떡", potato: "감자칩", sweetpotato: "고구마말랭이", cabbage: "김치", lettuce: "샐러드", pepper: "고춧가루", bean: "두부", strawberry: "딸기잼", tomato: "토마토주스", blueberry: "블루베리잼", apple: "사과즙" };
+  const ALL = ["paddy", "field", "greenhouse", "orchard"];
+
+  const METHODS = [
+    { id: "snail", e: "🐌", name: "우렁이 농법", fits: ["paddy"], cost: 40, y: 1.0, desc: "우렁이가 논의 잡초를 먹어 치워요.", miss: "우렁이는 물이 고인 논에서만 일할 수 있어요!" },
+    { id: "duck", e: "🦆", name: "오리 농법", fits: ["paddy"], cost: 60, y: 1.0, extra: 40, desc: "오리가 잡초와 벌레를 먹고, 똥은 거름이 돼요.", miss: "논이 아닌 곳에서는 오리가 작물을 밟고 다녀요!" },
+    { id: "ricebran", e: "🍚", name: "쌀겨 농법", fits: ["paddy"], cost: 25, y: 0.97, desc: "쌀겨를 뿌려 물속 잡초가 자라지 못하게 해요.", miss: "쌀겨 농법은 물을 댄 논에서 효과가 있어요." },
+    { id: "ladybug", e: "🐞", name: "천적 곤충", fits: ["greenhouse", "field", "orchard"], cost: 50, y: 1.0, desc: "무당벌레 같은 천적이 해충을 잡아먹어요.", miss: "물이 찬 논에서는 천적 곤충이 살기 어려워요." },
+    { id: "compost", e: "🍂", name: "퇴비·녹비", fits: ALL, cost: 30, y: 0.97, desc: "가축 분뇨 퇴비와 자운영 같은 풀로 땅심을 키워요.", miss: "" },
+    { id: "rotation", e: "🔄", name: "돌려짓기", fits: ["field"], cost: 10, y: 0.98, desc: "해마다 다른 작물을 심어 병과 해충을 줄여요.", miss: "한자리에서 오래 자라는 작물이라 돌려짓기가 어려워요." },
+    { id: "smartfarm", e: "📱", name: "스마트팜", fits: ["greenhouse"], cost: 180, y: 1.12, desc: "센서가 온도와 물을 자동으로 맞춰 줘요.", miss: "넓은 노지에서는 센서 효과가 작고 설치비만 많이 들었어요." },
+    { id: "eggoil", e: "🥚", name: "난황유 천연 약제", fits: ["field", "greenhouse", "orchard"], cost: 20, y: 0.97, desc: "식용유와 달걀노른자로 만든 친환경 약제예요.", miss: "벼농사에서는 난황유 효과가 크지 않아요." },
+    { id: "mulch", e: "🌿", name: "볏짚 덮기", fits: ["field", "orchard"], cost: 15, y: 0.97, desc: "비닐 대신 볏짚으로 흙을 덮어 잡초를 막아요.", miss: "논과 하우스에서는 볏짚 덮기가 잘 맞지 않아요." },
+    { id: "bee", e: "🐝", name: "꿀벌 꽃가루받이", fits: ["greenhouse", "orchard"], cost: 30, y: 1.06, desc: "꿀벌이 꽃가루를 옮겨 열매가 잘 맺혀요.", miss: "열매를 거두는 작물이 아니라 꿀벌이 할 일이 별로 없어요." },
+    { id: "solar", e: "☀️", name: "태양광·빗물 활용", fits: ALL, cost: 20, y: 0.97, desc: "빗물을 모아 쓰고 햇빛으로 전기를 만들어요.", miss: "" }
+  ];
+
+  // q: good(적절) ok(아쉬움) bad(부적절) chem(효과는 있지만 친환경 인증 취소)
+  const CRISES = [
+    { id: "aphid", e: "🐛", name: "진딧물 대습격", text: "작은 벌레 진딧물이 잎의 즙을 쪽쪽 빨아먹고 있어요!", when: s => s.crop.type !== "paddy", sols: [
+      { e: "🐞", t: "무당벌레 풀어 주기", q: "good", cost: 30, loss: 0.05, why: "천적인 무당벌레가 진딧물을 먹어 치웠어요." },
+      { e: "🥚", t: "난황유 뿌리기", q: "good", cost: 20, loss: 0.07, why: "천연 약제로 진딧물을 줄였어요." },
+      { e: "🖐️", t: "손으로 잡고 잎 씻기", q: "ok", cost: 50, loss: 0.14, why: "효과는 있었지만 시간이 오래 걸려 피해가 남았어요." },
+      { e: "🧪", t: "화학 살충제 뿌리기", q: "chem", cost: 40, loss: 0.03, why: "벌레는 사라졌지만 친환경 인증이 취소됐어요." },
+      { e: "😴", t: "알아서 없어지길 기다리기", q: "bad", cost: 0, loss: 0.35, why: "진딧물이 순식간에 불어나 피해가 컸어요." } ] },
+    { id: "weed", e: "🌱", name: "잡초 대폭발", text: "제초제를 안 쓰니 잡초가 작물보다 빨리 자라요!", sols: [
+      { e: "🌾", t: "볏짚·풀로 흙 덮기", q: "good", cost: 20, loss: 0.06, why: "햇빛을 가려 잡초가 자라지 못했어요.", when: s => s.crop.type !== "paddy" },
+      { e: "🐌", t: "우렁이 더 넣어 주기", q: "good", cost: 30, loss: 0.04, why: "우렁이가 논의 잡초를 깨끗이 먹었어요.", when: s => s.crop.type === "paddy" },
+      { e: "🚜", t: "제초 기계 빌려 쓰기", q: "good", cost: 40, loss: 0.06, why: "농업기술센터 기계로 잡초를 빠르게 뽑았어요." },
+      { e: "👐", t: "온 가족 김매기", q: "ok", cost: 60, loss: 0.1, why: "열심히 뽑았지만 인건비가 많이 들었어요." },
+      { e: "🧪", t: "제초제 뿌리기", q: "chem", cost: 30, loss: 0.02, why: "잡초는 죽었지만 친환경 인증이 취소됐어요." },
+      { e: "😴", t: "그냥 내버려 두기", q: "bad", cost: 0, loss: 0.3, why: "잡초가 양분을 빼앗아 작물이 자라지 못했어요." } ] },
+    { id: "rain", e: "🌧️", name: "끝나지 않는 장마", text: "한 달 내내 비가 와서 뿌리가 숨을 못 쉬어요!", sols: [
+      { e: "🕳️", t: "물길(배수로) 정비하기", q: "good", cost: 30, loss: 0.08, why: "고인 물이 빠져나가 뿌리가 살아났어요." },
+      { e: "⛱️", t: "비가림 시설 설치하기", q: "good", cost: 80, loss: 0.04, why: "비를 막아 병이 퍼지지 않았어요." },
+      { e: "🧪", t: "화학 살균제 잔뜩 뿌리기", q: "chem", cost: 40, loss: 0.1, why: "병은 줄었지만 친환경 인증이 취소됐어요." },
+      { e: "😴", t: "비가 그칠 때까지 기다리기", q: "bad", cost: 0, loss: 0.3, why: "뿌리가 썩어 작물이 많이 죽었어요." } ] },
+    { id: "heat", e: "🥵", name: "폭염 경보", text: "35도가 넘는 날이 계속돼 작물이 축 늘어졌어요!", sols: [
+      { e: "🕶️", t: "차광막 설치하기", q: "good", cost: 40, loss: 0.05, why: "그늘을 만들어 작물이 더위를 견뎠어요." },
+      { e: "🌅", t: "아침·저녁에 나눠 물 주기", q: "good", cost: 15, loss: 0.08, why: "시원할 때 물을 줘서 물이 낭비되지 않았어요." },
+      { e: "🚿", t: "한낮에 찬물 듬뿍 뿌리기", q: "bad", cost: 10, loss: 0.22, why: "뜨거운 한낮의 찬물은 뿌리를 놀라게 하고 물만 증발해요." },
+      { e: "😴", t: "더위가 지나가길 기다리기", q: "bad", cost: 0, loss: 0.3, why: "잎과 열매가 말라 버렸어요." } ] },
+    { id: "typhoon", e: "🌀", name: "태풍 북상", text: "아주 강한 태풍이 우리 농장 쪽으로 오고 있어요!", sols: [
+      { e: "🪵", t: "지지대·방풍망 미리 설치", q: "good", cost: 40, loss: 0.07, why: "미리 대비해서 피해를 크게 줄였어요." },
+      { e: "📄", t: "농작물 재해보험 가입", q: "good", cost: 25, loss: 0.1, why: "피해는 있었지만 보험금으로 손해를 메웠어요." },
+      { e: "🏃", t: "덜 익었어도 서둘러 수확", q: "ok", cost: 0, loss: 0.2, why: "일부는 건졌지만 덜 익어서 제값을 못 받았어요." },
+      { e: "😴", t: "아무것도 하지 않기", q: "bad", cost: 0, loss: 0.4, why: "작물이 쓰러지고 열매가 떨어졌어요." } ] },
+    { id: "price", e: "📉", name: "가격 폭락", text: "올해 모두 풍년이라 농산물 값이 뚝 떨어졌어요!", sols: [
+      { e: "🏭", t: "가공품으로 만들어 팔기", q: "good", cost: 60, loss: 0.05, why: "오래 두고 팔 수 있는 가공품으로 값을 지켰어요." },
+      { e: "🧺", t: "꾸러미로 소비자에게 직접 팔기", q: "good", cost: 30, loss: 0.08, why: "중간 유통 없이 팔아 제값을 받았어요." },
+      { e: "❄️", t: "저온 창고에 보관했다 팔기", q: "ok", cost: 40, loss: 0.12, why: "값이 조금 오른 뒤 팔았지만 보관비가 들었어요." },
+      { e: "🚜", t: "밭을 갈아엎기", q: "bad", cost: 0, loss: 0.5, why: "애써 키운 작물을 버려 손해가 컸어요." } ] },
+    { id: "snailEscape", e: "🐌", name: "우렁이 대탈출", text: "논의 우렁이가 물길을 타고 하천으로 빠져나가고 있어요!", when: s => s.method.id === "snail", sols: [
+      { e: "🥅", t: "그물망 설치하고 우렁이 거두기", q: "good", cost: 25, loss: 0.02, why: "우렁이가 하천으로 퍼지는 것을 막았어요." },
+      { e: "🚜", t: "수확 뒤 물 빼고 깊이갈이", q: "good", cost: 20, loss: 0.03, why: "겨울을 나지 못하게 해서 내년 피해를 막았어요." },
+      { e: "😴", t: "우렁이니까 괜찮겠지", q: "bad", cost: 120, loss: 0.05, why: "왕우렁이가 하천 생태계를 어지럽혀 정화 비용을 냈어요." } ] },
+    { id: "anthracnose", e: "🍂", name: "탄저병 발생", text: "열매에 검은 반점이 생기며 썩어 가요!", when: s => ["pepper", "apple", "strawberry", "tomato"].includes(s.crop.id), sols: [
+      { e: "✂️", t: "병든 열매 바로 따서 없애기", q: "good", cost: 15, loss: 0.08, why: "병이 옆으로 퍼지기 전에 막았어요." },
+      { e: "🫙", t: "석회보르도액(친환경 약제) 뿌리기", q: "good", cost: 25, loss: 0.06, why: "농촌진흥청이 권하는 친환경 약제로 병을 줄였어요." },
+      { e: "📺", t: "유튜브에서 본 락스 뿌리기", q: "bad", cost: 10, loss: 0.45, why: "검증되지 않은 정보였어요! 작물까지 상해 버렸어요." },
+      { e: "🧪", t: "화학 살균제 뿌리기", q: "chem", cost: 40, loss: 0.03, why: "병은 잡았지만 친환경 인증이 취소됐어요." } ] },
+    { id: "labor", e: "🧑‍🌾", name: "일손 부족", text: "수확철인데 일할 사람이 모자라요!", sols: [
+      { e: "🙋", t: "농촌 일손 돕기 자원봉사 신청", q: "good", cost: 20, loss: 0.05, why: "봉사자들 덕분에 제때 수확했어요." },
+      { e: "🤝", t: "이웃 농가와 기계 함께 쓰기", q: "good", cost: 35, loss: 0.05, why: "기계를 나눠 써서 비용도 아끼고 일도 끝냈어요." },
+      { e: "🌙", t: "혼자 밤새 일하기", q: "ok", cost: 0, loss: 0.15, why: "다 하지 못했고 몸도 지쳤어요." },
+      { e: "😢", t: "수확 일부 포기하기", q: "bad", cost: 0, loss: 0.3, why: "거두지 못한 작물이 밭에서 썩었어요." } ] },
+    { id: "boar", e: "🐗", name: "멧돼지 출몰", text: "밤마다 멧돼지가 내려와 작물을 파헤쳐요!", when: s => s.crop.type !== "greenhouse", sols: [
+      { e: "🚧", t: "튼튼한 울타리 설치하기", q: "good", cost: 40, loss: 0.04, why: "울타리 덕분에 멧돼지가 들어오지 못했어요." },
+      { e: "🎃", t: "허수아비 세우기", q: "ok", cost: 5, loss: 0.2, why: "처음엔 놀랐지만 멧돼지가 금방 익숙해졌어요." },
+      { e: "😴", t: "그냥 내버려 두기", q: "bad", cost: 0, loss: 0.35, why: "밭이 엉망이 됐어요." } ] },
+    { id: "bird", e: "🐦", name: "새떼 습격", text: "잘 익은 열매를 새들이 콕콕 쪼아 먹어요!", when: s => s.crop.type === "orchard", sols: [
+      { e: "🕸️", t: "새 그물 씌우기", q: "good", cost: 35, loss: 0.04, why: "새가 다치지 않게 막으면서 열매를 지켰어요." },
+      { e: "✨", t: "반짝이 테이프 달기", q: "ok", cost: 5, loss: 0.15, why: "잠깐 효과가 있었지만 새들이 곧 돌아왔어요." },
+      { e: "😴", t: "새도 먹고 살아야지", q: "bad", cost: 0, loss: 0.35, why: "열매 절반을 새들이 먹어 버렸어요." } ] }
+  ];
+
+  const SALES = [
+    { id: "wholesale", e: "🚚", name: "도매시장 출하", price: 0.97, cost: 0, desc: "한 번에 많이 팔지만 수수료가 있고 친환경 가치를 덜 쳐줘요." },
+    { id: "local", e: "🏪", name: "로컬푸드 직매장", price: 1.2, cost: 30, desc: "우리 지역 소비자에게 신선하게 바로 팔아요." },
+    { id: "online", e: "📦", name: "온라인 직거래", price: 1.35, cost: 90, desc: "비싸게 팔 수 있지만 포장·택배·홍보비가 들어요." },
+    { id: "school", e: "🏫", name: "학교 급식 납품", price: 1.2, cost: 20, stable: true, desc: "친환경 급식으로 약속한 값에 꾸준히 팔아요." },
+    { id: "box", e: "🧺", name: "친환경 꾸러미 정기배송", price: 1.3, cost: 60, stable: true, desc: "단골 회원에게 매주 꾸러미로 보내요." },
+    { id: "process", e: "🏭", name: "가공품 만들기", price: 1.5, costRate: 0.15, desc: "{product}(으)로 만들어 비싸게 팔지만 가공비가 많이 들어요." },
+    { id: "tour", e: "👨‍👩‍👧", name: "수확 체험 농장", price: 1.15, cost: 120, extra: 350, fits: ["strawberry", "potato", "sweetpotato", "blueberry", "apple", "tomato"], desc: "가족 손님에게 체험비를 받고 농산물도 팔아요." },
+    { id: "contract", e: "🤝", name: "대형마트 계약 재배", price: 1.1, cost: 10, stable: true, desc: "미리 정한 값에 팔아 시세 걱정이 적어요." }
+  ];
+
+  const GRADES = [
+    { min: 1.1, e: "🏆", name: "전문가 농부", msg: "환경도 지키고 돈도 잘 버는 최고의 농장이에요!" },
+    { min: 0.7, e: "🌾", name: "중수 농부", msg: "꽤 잘 해냈어요! 조금만 더 고민하면 전문가!" },
+    { min: -Infinity, e: "🌱", name: "초보 농부", msg: "아직 배울 게 많아요. 다시 도전해 봐요!" }
+  ];
+  /* =============================================== */
+
+  const STEPS = [["🌱", "작물"], ["🌿", "농법"], ["⚡", "위기"], ["🛒", "판매"], ["🏆", "결과"]];
+  const $screen = document.getElementById("screen");
+  const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const won = n => (n < 0 ? "-" : "") + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "만 원";
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const sleep = ms => new Promise(r => setTimeout(r, reduce() ? 0 : ms));
+  function josa(w, pair) {
+    const c = w.charCodeAt(w.length - 1);
+    const has = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 !== 0;
+    const [a, b] = pair.split("/"); return w + (has ? a : b);
+  }
+
+  let S = {};
+  function newGame(farm) { S = { farm, step: 0 }; }
+
+  /* ---------- 진행 표시 ---------- */
+  function hud() {
+    document.getElementById("hud").hidden = false;
+    document.getElementById("farmSign").textContent = "🏡 " + S.farm;
+    document.getElementById("track").innerHTML = STEPS.map((s, i) =>
+      (i ? '<span class="bar"></span>' : "") +
+      '<span class="dot ' + (i < S.step ? "done" : i === S.step ? "now" : "") + '" title="' + s[1] + '">' + (i < S.step ? "✔" : s[0]) + "</span>").join("");
+  }
+
+  /* ---------- 시작 화면 ---------- */
+  function startScreen() {
+    document.getElementById("hud").hidden = true;
+    $screen.innerHTML =
+      '<div class="stage"><div class="title-card">' +
+        '<div class="logo">🚜</div>' +
+        '<h1>친환경 농장 타이쿤</h1>' +
+        '<p class="sub">농약 없이도 돈 버는 농장을 만들 수 있을까요? 작물과 농법, 판매 방법을 골라 1년 동안 농장을 운영해 보세요!</p>' +
+        '<form class="name-input" id="startForm"><label for="farmName">우리 농장 이름</label>' +
+        '<input id="farmName" type="text" maxlength="12" placeholder="예) 초록새싹 농장" autocomplete="off" required></form>' +
+        '<div class="how">' +
+          '<div><span>🌱</span>작물 고르기</div><div><span>🌿</span>농법 고르기</div><div><span>⚡</span>위기 해결</div><div><span>🛒</span>판매 방법</div><div><span>🏆</span>등급 확인</div>' +
+        '</div>' +
+        '<button class="btn sun" type="submit" form="startForm">농장 시작하기!</button>' +
+      '</div></div>' + hallHTML();
+    const f = document.getElementById("startForm");
+    f.addEventListener("submit", e => {
+      e.preventDefault();
+      const v = document.getElementById("farmName").value.trim();
+      if (!v) { document.getElementById("farmName").focus(); return; }
+      newGame(v); cropStep();
+    });
+  }
+
+  /* ---------- 공통: 3장 뽑기 ---------- */
+  async function pickStep({ face, title, sub, pool, chosen, render, onPick, button }) {
+    hud();
+    $screen.innerHTML =
+      '<div class="stage">' +
+        '<div class="bubble"><div class="face">' + face + '</div><div><h2>' + title + '</h2><p>' + sub + '</p></div></div>' +
+        '<div class="cards rolling" id="cards">' + chosen.map(() => '<button class="pick" type="button" disabled></button>').join("") + '</div>' +
+        '<div class="actions"><button class="btn" type="button" id="go" disabled>' + button + '</button></div>' +
+      '</div>';
+    const wrap = document.getElementById("cards");
+    const btns = Array.from(wrap.children);
+    // 굴리기 애니메이션
+    let stopped = btns.map(() => false);
+    const tick = setInterval(() => {
+      btns.forEach((b, i) => { if (!stopped[i]) b.innerHTML = render(pool[Math.floor(Math.random() * pool.length)], true); });
+    }, 80);
+    if (reduce()) { /* 바로 공개 */ }
+    for (let i = 0; i < btns.length; i++) {
+      await sleep(i === 0 ? 900 : 350);
+      stopped[i] = true;
+      btns[i].innerHTML = render(chosen[i], false);
+      btns[i].classList.add("land");
+    }
+    clearInterval(tick);
+    wrap.classList.remove("rolling");
+    let sel = -1;
+    btns.forEach((b, i) => {
+      b.disabled = false; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        sel = i; btns.forEach((x, j) => x.setAttribute("aria-pressed", j === i ? "true" : "false"));
+        document.getElementById("go").disabled = false;
+      });
+    });
+    document.getElementById("go").addEventListener("click", () => { if (sel >= 0) onPick(chosen[sel]); });
+  }
+
+  /* ---------- 1. 작물 ---------- */
+  function cropStep() {
+    S.step = 0;
+    const chosen = shuffle(CROPS).slice(0, 3);
+    pickStep({
+      face: "🧑‍🌾", title: "어떤 작물을 길러 볼까요?", sub: "세 가지 작물이 나왔어요. 버는 돈과 드는 돈, 특징을 비교해 보세요.",
+      pool: CROPS, chosen, button: "이 작물로 결정!",
+      render: (c, rolling) => '<div class="emo">' + c.e + '</div><div class="body"><div class="name">' + esc(c.name) + '</div>' +
+        (rolling ? "" :
+        '<div class="row"><span class="tag">' + PLACE[c.type] + '</span><span class="tag sun">일손 ' + "💪".repeat(c.work) + '</span>' + (c.vol >= 0.3 ? '<span class="tag berry">값 변동 큼</span>' : c.vol <= 0.1 ? '<span class="tag grape">값 안정</span>' : "") + '</div>' +
+        '<div class="money"><span>예상 판매액</span><b>' + won(c.rev) + '</b><span>드는 돈</span><b>' + won(c.cost) + '</b></div>' +
+        '<div class="desc">' + esc(c.note) + '</div>') + '</div>',
+      onPick: c => { S.crop = c; methodStep(); }
+    });
+  }
+
+  /* ---------- 2. 농법 ---------- */
+  function methodStep() {
+    S.step = 1;
+    let chosen = shuffle(METHODS).slice(0, 3);
+    const fits = m => m.fits.includes(S.crop.type);
+    if (!chosen.some(fits)) {
+      const good = shuffle(METHODS.filter(m => fits(m) && !chosen.includes(m)))[0];
+      chosen[Math.floor(Math.random() * 3)] = good;
+    }
+    pickStep({
+      face: S.crop.e, title: josa(S.crop.name, "을/를") + " 어떤 친환경 방법으로 기를까요?", sub: "우리 작물이 자라는 곳(" + PLACE[S.crop.type] + ")에 잘 맞는 방법을 골라야 해요.",
+      pool: METHODS, chosen, button: "이 방법으로 결정!",
+      render: (m, rolling) => '<div class="emo">' + m.e + '</div><div class="body"><div class="name">' + esc(m.name) + '</div>' +
+        (rolling ? "" :
+        '<div class="row"><span class="tag sun">준비 비용 ' + won(m.cost) + '</span></div>' +
+        '<div class="desc">' + esc(m.desc) + '</div>') + '</div>',
+      onPick: m => { S.method = m; crisisStep(); }
+    });
+  }
+
+  /* ---------- 3. 위기 ---------- */
+  async function crisisStep() {
+    S.step = 2; hud();
+    const pool = CRISES.filter(c => !c.when || c.when(S));
+    const crisis = pool[Math.floor(Math.random() * pool.length)];
+    $screen.innerHTML =
+      '<div class="stage">' +
+        '<div class="bubble"><div class="face">😰</div><div><h2>농사를 짓다 보니 위기가 찾아왔어요!</h2><p>어떤 위기일까요? 두근두근...</p></div></div>' +
+        '<div class="crisis-stage"><div class="crisis-card spin" id="cc"><div class="emo" id="ce">❓</div><div class="label">위기 발생</div><h3 id="cn">두근두근</h3><p id="ct"></p></div></div>' +
+        '<div id="solArea"></div>' +
+      '</div>';
+    const ce = document.getElementById("ce"), cn = document.getElementById("cn");
+    let delay = 60;
+    if (!reduce()) {
+      for (let i = 0; i < 18; i++) {
+        const c = CRISES[i % CRISES.length];
+        ce.textContent = c.e; cn.textContent = c.name;
+        await sleep(delay); delay *= 1.15;
+      }
+    }
+    const cc = document.getElementById("cc");
+    cc.classList.remove("spin"); cc.classList.add("hit");
+    ce.textContent = crisis.e; cn.textContent = crisis.name; document.getElementById("ct").textContent = crisis.text;
+    S.crisis = crisis;
+    await sleep(900);
+
+    let sols = crisis.sols.filter(s => !s.when || s.when(S));
+    const good = shuffle(sols.filter(s => s.q === "good"));
+    const notGood = shuffle(sols.filter(s => s.q !== "good"));
+    let chosen = [good[0], notGood[0]];
+    const rest = shuffle(sols.filter(s => !chosen.includes(s)));
+    chosen.push(rest[0]);
+    chosen = shuffle(chosen.filter(Boolean)).slice(0, 3);
+
+    const area = document.getElementById("solArea");
+    area.innerHTML = '<div class="bubble" style="margin-bottom:14px"><div class="face">🤔</div><div><h2>어떻게 해결할까요?</h2><p>친환경 농장답게, 그리고 피해는 적게! 가장 좋은 방법을 골라 보세요.</p></div></div>' +
+      '<div class="cards rolling" id="cards">' + chosen.map(() => '<button class="pick" type="button" disabled></button>').join("") + '</div>' +
+      '<div class="actions" style="margin-top:16px"><button class="btn" type="button" id="go" disabled>이렇게 해결하기!</button></div>';
+    area.scrollIntoView({ behavior: reduce() ? "auto" : "smooth", block: "start" });
+
+    const allSols = CRISES.flatMap(c => c.sols);
+    const render = (s, rolling) => '<div class="emo">' + s.e + '</div><div class="body"><div class="name">' + esc(s.t) + '</div>' +
+      (rolling ? "" : '<div class="row"><span class="tag sun">비용 ' + won(s.cost) + '</span></div>') + '</div>';
+    const wrap = document.getElementById("cards"); const btns = Array.from(wrap.children);
+    const stopped = btns.map(() => false);
+    const tick = setInterval(() => btns.forEach((b, i) => { if (!stopped[i]) b.innerHTML = render(allSols[Math.floor(Math.random() * allSols.length)], true); }), 80);
+    for (let i = 0; i < btns.length; i++) { await sleep(i === 0 ? 700 : 300); stopped[i] = true; btns[i].innerHTML = render(chosen[i], false); btns[i].classList.add("land"); }
+    clearInterval(tick); wrap.classList.remove("rolling");
+    let sel = -1;
+    btns.forEach((b, i) => { b.disabled = false; b.setAttribute("aria-pressed", "false"); b.addEventListener("click", () => { sel = i; btns.forEach((x, j) => x.setAttribute("aria-pressed", j === i ? "true" : "false")); document.getElementById("go").disabled = false; }); });
+    document.getElementById("go").addEventListener("click", () => { if (sel >= 0) { S.solution = chosen[sel]; salesStep(); } });
+  }
+
+  const salesCost = s => s.costRate ? Math.round(S.crop.rev * s.costRate / 10) * 10 : s.cost;
+
+  /* ---------- 4. 판매 ---------- */
+  function salesStep() {
+    S.step = 3;
+    const chosen = shuffle(SALES).slice(0, 3);
+    const product = PRODUCT[S.crop.id];
+    pickStep({
+      face: "💰", title: "다 키운 " + josa(S.crop.name, "을/를") + " 어떻게 팔까요?", sub: "판매 방법에 따라 받는 값과 드는 비용이 달라요.",
+      pool: SALES, chosen, button: "이렇게 팔기!",
+      render: (s, rolling) => {
+        const d = s.desc.replace("{product}", product);
+        let tags = '<span class="tag sun">비용 ' + won(salesCost(s)) + '</span>';
+        if (s.stable) tags += '<span class="tag grape">값 안정</span>';
+        if (s.extra) tags += '<span class="tag">체험비 수입</span>';
+        return '<div class="emo">' + s.e + '</div><div class="body"><div class="name">' + esc(s.name) + '</div>' +
+          (rolling ? "" : '<div class="row">' + tags + '</div><div class="desc">' + esc(d) + '</div>') + '</div>';
+      },
+      onPick: s => { S.sales = s; resultStep(); }
+    });
+  }
+
+  /* ---------- 5. 계산 ---------- */
+  function compute() {
+    const c = S.crop, m = S.method, sol = S.solution, sa = S.sales;
+    const fit = m.fits.includes(c.type);
+    const certLost = sol.q === "chem";
+    const methodY = fit ? m.y : 0.85;
+    const ecoY = 0.9; // 친환경 농업은 수확량이 조금 줄어요
+    const v = c.vol * (sa.stable ? 0.4 : 1);
+    const market = Math.round((1 + (Math.random() * 2 - 1) * v) * 100) / 100;
+
+    let price = sa.price;
+    if (sa.id === "process" && c.id === "lettuce") price = 1.05;
+    if (certLost) price = Math.max(0.85, price * 0.8);
+
+    const harvest = c.rev * ecoY * methodY * (1 - sol.loss);
+    const cropSales = harvest * price * market;
+    const income = [["농산물 판매", cropSales]];
+    if (m.extra && fit) income.push(["다 자란 오리 판매", m.extra]);
+    if (sa.extra) {
+      const tourFit = sa.fits.includes(c.id);
+      income.push(["체험비 수입", tourFit ? sa.extra : 80]);
+    }
+    const spend = [["기본 농사 비용(종자·퇴비·인건비)", c.cost], [m.name + " 준비", m.cost], ["위기 대응: " + sol.t, sol.cost], [sa.name + " 비용", salesCost(sa)]].filter(x => x[1] > 0);
+    const inSum = income.reduce((a, x) => a + x[1], 0);
+    const outSum = spend.reduce((a, x) => a + x[1], 0);
+    const profit = Math.round(inSum - outSum);
+    const bench = c.rev - c.cost;
+    const ratio = profit / bench;
+    let grade = GRADES.find(g => ratio >= g.min);
+    if (certLost && grade === GRADES[0]) grade = GRADES[1];
+
+    const eco = (fit ? 1 : 0) + (sol.q === "good" ? 1 : 0) + (certLost ? 0 : 1);
+
+    const notes = [];
+    notes.push(fit
+      ? { k: "good", ic: m.e, h: "농법이 잘 맞았어요", t: josa(m.name, "은/는") + " " + PLACE[c.type] + "에서 기르는 " + c.name + "에 딱 맞았어요. " + m.desc }
+      : { k: "bad", ic: m.e, h: "농법이 잘 안 맞았어요", t: m.miss || "우리 작물과 잘 맞지 않아 효과가 적었어요." });
+    const qMap = { good: ["good", "위기 대응 성공!"], ok: ["mid", "조금 아쉬운 대응"], bad: ["bad", "위기 대응 실패"], chem: ["bad", "친환경 인증 취소!"] };
+    notes.push({ k: qMap[sol.q][0], ic: sol.e, h: qMap[sol.q][1] + " (" + S.crisis.name + ")", t: sol.t + ": " + sol.why + " 피해율 " + Math.round(sol.loss * 100) + "%" });
+    const saleNote = sa.desc.replace("{product}", PRODUCT[c.id]);
+    notes.push({ k: price >= 1.2 ? "good" : price >= 1 ? "mid" : "bad", ic: sa.e, h: sa.name, t: saleNote + (certLost ? " 하지만 친환경 인증이 취소되어 제값을 받지 못했어요." : "") + (sa.extra && !sa.fits.includes(c.id) ? " " + josa(c.name, "은/는") + " 체험 활동으로는 인기가 적었어요." : "") });
+    const pct = Math.round((market - 1) * 100);
+    notes.push({ k: pct >= 0 ? "good" : "mid", ic: pct >= 0 ? "📈" : "📉", h: "올해 " + c.name + " 시세", t: pct === 0 ? "평년과 비슷했어요." : "평년보다 " + Math.abs(pct) + "% " + (pct > 0 ? "올랐어요! 운이 좋았네요." : "떨어졌어요.") + (sa.stable ? " 미리 약속한 값에 팔아서 영향이 적었어요." : "") });
+
+    return { income, spend, inSum, outSum, profit, bench, ratio, grade, eco, notes, certLost };
+  }
+
+  /* ---------- 6. 결과 ---------- */
+  function resultStep() {
+    S.step = 4; hud();
+    const r = compute();
+    saveRecord(r);
+    const cmp = r.ratio >= 1 ? "보통 " + S.crop.name + " 농가(" + won(r.bench) + ")보다 " + Math.round((r.ratio - 1) * 100) + "% 더 벌었어요!" :
+      "보통 " + S.crop.name + " 농가는 " + won(r.bench) + " 정도 벌어요.";
+    $screen.innerHTML =
+      '<div class="stage"><div class="result">' +
+        '<div class="grade"><div class="medal">' + r.grade.e + '</div><div class="gname">' + r.grade.name + '</div>' +
+          '<div class="farm">' + esc(S.farm) + ' · ' + S.crop.e + ' ' + esc(S.crop.name) + ' · ' + S.method.e + ' ' + esc(S.method.name) + ' · ' + S.sales.e + ' ' + esc(S.sales.name) + '</div>' +
+          '<div>' + r.grade.msg + '</div></div>' +
+        '<div class="profit"><div class="lbl">1년 순이익</div><div class="num' + (r.profit < 0 ? " minus" : "") + '" id="pnum">0만 원</div><div class="cmp">' + cmp + '</div></div>' +
+        '<div><div class="tip" style="margin-bottom:2px">친환경 점수</div><div class="eco">' + [0, 1, 2].map(i => '<span class="' + (i < r.eco ? "" : "off") + '">🍀</span>').join("") + '</div></div>' +
+        '<div class="ledger">' +
+          '<section class="in"><h3>번 돈 (수입)</h3><ul>' + r.income.map(x => '<li><span>' + esc(x[0]) + '</span><b>' + won(x[1]) + '</b></li>').join("") +
+            '<li class="sum"><span>합계</span><b>' + won(r.inSum) + '</b></li></ul></section>' +
+          '<section class="out"><h3>쓴 돈 (지출)</h3><ul>' + r.spend.map(x => '<li><span>' + esc(x[0]) + '</span><b>' + won(x[1]) + '</b></li>').join("") +
+            '<li class="sum"><span>합계</span><b>' + won(r.outSum) + '</b></li></ul></section>' +
+        '</div>' +
+        '<div class="notes">' + r.notes.map(n => '<div class="note ' + n.k + '"><span class="ic">' + n.ic + '</span><div><b>' + esc(n.h) + '</b>' + esc(n.t) + '</div></div>').join("") + '</div>' +
+        '<div class="actions"><button class="btn sun" type="button" id="again">같은 농장으로 다시 도전</button><button class="btn ghost" type="button" id="home">처음 화면으로</button></div>' +
+        '<div class="tip">결과 화면을 캡처해서 발표할 때 활용해 보세요. 같은 선택이어도 시세에 따라 결과가 조금씩 달라져요.</div>' +
+      '</div></div>' + hallHTML();
+    countUp(document.getElementById("pnum"), r.profit);
+    if (r.grade === GRADES[0]) confetti();
+    document.getElementById("again").addEventListener("click", () => { const f = S.farm; newGame(f); cropStep(); });
+    document.getElementById("home").addEventListener("click", startScreen);
+    window.scrollTo({ top: 0, behavior: reduce() ? "auto" : "smooth" });
+  }
+  function countUp(el, to) {
+    if (reduce()) { el.textContent = won(to); return; }
+    const t0 = performance.now(), dur = 1400;
+    (function f(t) {
+      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = won(to * e);
+      if (p < 1) requestAnimationFrame(f);
+    })(t0);
+  }
+  function confetti() {
+    if (reduce()) return;
+    const box = document.getElementById("confetti"); box.innerHTML = "";
+    const items = ["🍀", "⭐", "🌸", "💰", S.crop.e];
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement("i");
+      s.textContent = items[i % items.length];
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.animationDuration = 2 + Math.random() * 2 + "s";
+      s.style.animationDelay = Math.random() * 0.8 + "s";
+      box.appendChild(s);
+    }
+    setTimeout(() => box.innerHTML = "", 5000);
+  }
+
+  /* ---------- 이 기기 명예의 전당 ---------- */
+  const KEY = "eco-farm-tycoon-hall";
+  function readHall() { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } }
+  function saveRecord(r) {
+    try {
+      const h = readHall();
+      h.push({ farm: S.farm, crop: S.crop.e + " " + S.crop.name, profit: r.profit, grade: r.grade.e });
+      h.sort((a, b) => b.profit - a.profit);
+      localStorage.setItem(KEY, JSON.stringify(h.slice(0, 5)));
+    } catch (e) {}
+  }
+  function hallHTML() {
+    const h = readHall();
+    return '<div class="hall" style="margin-top:16px"><h3>🏅 이 기기 명예의 전당</h3>' +
+      (h.length ? '<ol>' + h.map(x => '<li>' + x.grade + ' <b>' + esc(x.farm) + '</b> · ' + esc(x.crop) + ' · ' + won(x.profit) + '</li>').join("") + '</ol>'
+        : '<div class="empty">아직 기록이 없어요. 첫 번째 농장 주인이 되어 보세요!</div>') + '</div>';
+  }
+
+  startScreen();
+})();
+</script>
+</body>
+</html>
